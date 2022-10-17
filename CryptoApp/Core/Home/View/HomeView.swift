@@ -1,13 +1,7 @@
-//
-//  HomeView.swift
-//  CryptoApp
-//
-//  Created by Alandis Seals on 10/17/22.
-//
-
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject private var vm: HomeViewModel
     @State private var showPorfolio: Bool = false
     
     var body: some View {
@@ -17,12 +11,18 @@ struct HomeView: View {
             
             // MARK: Content Layer
             VStack {
-               homeHeader
-                List {
-                    CoinRowView(coin: DeveloperPreview.instance.coin, showHoldingColums: false)
-                }
-                .listStyle(PlainListStyle())
+                homeHeader
                 
+                columnTitle
+                
+                if !showPorfolio {
+                    allCoinsList
+                        .transition(.move(edge: .leading))
+                }
+                if showPorfolio {
+                    porfolioCoinsList
+                        .transition(.move(edge: .trailing))
+                }
                 Spacer(minLength: 0)
             }
         }
@@ -34,6 +34,7 @@ struct HomeView_Previews: PreviewProvider {
         NavigationView{
             HomeView()
         }
+        .environmentObject(dev.HomeVM)
     }
 }
 
@@ -43,7 +44,7 @@ extension HomeView {
             CircleButtonView(iconName: showPorfolio ? "plus" : "info")
                 .animation(.none, value: showPorfolio)
                 .background(
-                CircleButtonAnimationView(animate: $showPorfolio)
+                    CircleButtonAnimationView(animate: $showPorfolio)
                 )
             
             Spacer()
@@ -64,6 +65,45 @@ extension HomeView {
                     }
                 }
         }
+        .padding(.horizontal)
+    }
+    
+    private var allCoinsList: some View {
+        List {
+            ForEach(vm.allCoins) { coin in
+                CoinRowView(coin: coin, showHoldingColums: false)
+                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+            }
+        }
+        .listStyle(PlainListStyle())
+    }
+    
+    private var porfolioCoinsList: some View {
+        List {
+            ForEach(vm.allCoins) { coin in
+                CoinRowView(coin: coin, showHoldingColums: true)
+                    .listRowInsets(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+            }
+        }
+        .listStyle(PlainListStyle())
+    }
+    
+    private var columnTitle: some View {
+        HStack {
+            Text("Coin")
+            
+            Spacer()
+            
+            if showPorfolio {
+                Text("Holdings")
+            }
+            
+            Text("Price")
+                .frame(width: UIScreen.main.bounds.width / 3.5, alignment: .trailing)
+
+        }
+        .font(.caption)
+        .foregroundColor(Color.theme.secondaryTextColor)
         .padding(.horizontal)
     }
 }
